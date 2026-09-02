@@ -1,11 +1,16 @@
 add_newline = true
 command_timeout = 500
-format = "$os$username[$directory$git_branch$git_status]($style)$character"
+format = "$os$username[$directory$git_branch$git_status]($style)$python$character"
 palette = "catppuccin_mocha"
 
 [character]
 error_symbol = "[✗](bold red)"
 success_symbol = "[❯](bold green)"
+
+[python]
+symbol = " "
+style = "yellow"
+format = "via [${symbol}${pyenv_prefix}(${version} )(\\($virtualenv\\))]($style) "
 
 [directory]
 style = "bold blue"
