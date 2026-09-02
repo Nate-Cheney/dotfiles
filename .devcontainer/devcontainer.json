@@ -1,0 +1,17 @@
+{
+    "name": "Dotfiles",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "remoteUser": "vscode",
+    "features": {
+        "ghcr.io/devcontainers/features/node:2": {
+            "version": "22",
+            "npmVersion": "12.0.2"
+        }
+    },
+    "mounts": [
+        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind",
+        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind"
+    ],
+    "postCreateCommand": "bash .devcontainer/setup.sh"
+}
+
