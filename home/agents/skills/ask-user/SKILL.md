@@ -1,158 +1,44 @@
 ---
 name: ask-user
-description: "You MUST use this before high-stakes architectural decisions, irreversible changes, or when requirements are ambiguous. Runs a decision handshake with the ask_user tool: summarize context, collect structured user choice, then proceed."
-metadata:
-  short-description: Decision gate for ambiguity and high-stakes choices
+description: "Ask the user structured multiple-choice questions via the ask_user tool. Use in lieu of plain-text questions that require a response, including (but not limited to): clarification, preferences, and confirmation."
 ---
 
-# Ask User Decision Gate
+# Ask User
 
-Use this skill to force explicit user alignment before consequential decisions.
+Call the `ask_user` tool to ask the user one or more questions with selectable options. Single question renders a simple list; multiple render a tabbed UI. TUI mode only.
 
-This skill is about **decision control**, not general chit-chat.
-
-## Non-negotiable rule
-
-Invoke `ask_user` before proceeding when **any** of the following is true:
-
-1. The next step changes architecture, schema, API contracts, deployment strategy, or security posture.
-2. The work is costly to undo (large refactor, migration, destructive edit, production-facing behavior change).
-3. Requirements, constraints, or success criteria are unclear, conflicting, or missing.
-4. Multiple valid options exist and the trade-off is preference-dependent.
-5. You are about to assume something that can materially change implementation.
-
-Do **not** skip this gate unless the user has already provided a clear, explicit decision for the exact trade-off.
-
-## Agent Protocol Handshake (required)
-
-Follow this handshake in order.
-
-### 1) Detect boundary
-Classify the current step as:
-- `high_stakes`
-- `ambiguous`
-- `both`
-- `clear` (no gate needed)
-
-If classification is not `clear`, continue.
-
-### 2) Gather evidence first
-Before asking, gather context from available tools (`read`, `bash`, `exa`, `ref`, etc.).
-Do not ask the user to decide blind.
-
-### 3) Synthesize context
-Prepare a short neutral summary (3-7 bullets or short paragraph) covering:
-- current state
-- key constraints
-- trade-offs
-- recommendation (if any)
-
-### 4) Ask one focused question
-Call `ask_user` with one decision at a time:
-- `question`: concrete decision prompt
-- `context`: synthesized summary
-- `options`: 2-5 clear choices when possible
-- `allowMultiple`: `false` unless independent selections are genuinely needed
-- `allowFreeform`: usually `true`
-- `displayMode` *(optional)*: `"overlay"` (default) or `"inline"`. Use `"inline"` when preceding assistant context (summary, trade-offs, recommendation) is essential to the decision and should remain visible — overlays cover the conversation underneath. The user may set a personal default via the `PI_ASK_USER_DISPLAY_MODE` environment variable; only pass this when you intentionally want to override it for one call.
-
-### 5) Commit the decision
-After response:
-- restate the decision in plain language
-- state what will be done next
-- proceed with implementation
-
-### 6) Re-open only on new ambiguity
-Ask again only if materially new uncertainty appears.
-Avoid repetitive confirmation loops.
-
-## Anti-overasking guardrails (required)
-
-Apply a strict question budget per decision boundary:
-
-- **Max 1** `ask_user` call per decision boundary in normal cases.
-- **Max 2** `ask_user` calls for the same boundary when first response is unclear/cancelled.
-- Never ask the same trade-off again without new evidence.
-
-Escalation ladder:
-
-1. **Attempt 1:** structured options + concise context.
-2. **Attempt 2 (only if needed):** narrower question with agent recommendation and explicit choices:
-   - `Proceed with recommended option`
-   - `Choose another option` (freeform)
-   - `Stop for now`
-
-After attempt 2:
-
-- If boundary is `high_stakes` or `both`: stop and mark blocked. Do not keep asking.
-- If boundary is `ambiguous` only and the user says “your call” or equivalent: proceed with the most reversible default and state assumptions explicitly.
-
-## `ask_user` payload quality standard
-
-### Question quality
-Use:
-- “Which option should we adopt for X?”
-- “Do you want A (fast) or B (safer) for Y?”
-
-Avoid:
-- broad/open prompts with no decision boundary
-- multiple unrelated decisions in one ask_user prompt
-- questions that should be answered by reading code/docs first
-
-### Option quality
-Options must be:
-- mutually understandable
-- short and outcome-oriented
-- explicit on trade-offs
-
-Good options include a short description when trade-offs are non-obvious.
-
-## Recommended patterns
-
-### Single-select architecture decision
+## Schema
 
 ```json
 {
-  "question": "Which caching strategy should we use for the first release?",
-  "context": "Current API has p95 latency issues. Redis is fastest but adds infra complexity; in-memory cache is simpler but not shared across instances.",
-  "options": [
-    { "title": "In-memory cache", "description": "Simpler rollout, weaker horizontal consistency" },
-    { "title": "Redis cache", "description": "Better consistency and scalability, more ops overhead" }
-  ],
-  "allowMultiple": false,
-  "allowFreeform": true
+  "questions": [{
+    "id": "scope",
+    "label": "Scope",
+    "prompt": "Which modules should the change touch?",
+    "options": [
+      { "value": "api", "label": "API only", "description": "Route handlers and schemas" },
+      { "value": "all", "label": "Full stack" }
+    ],
+    "allowOther": false
+  }]
 }
 ```
 
-### Multi-select when decisions are independent
+Per question:
 
-```json
-{
-  "question": "Select the first-wave hardening items to implement now.",
-  "context": "We can ship quickly with baseline controls, then add targeted hardening. Budget is limited to 1-2 days.",
-  "options": [
-    "Rate limiting",
-    "Audit logging",
-    "Input schema validation",
-    "Secrets rotation"
-  ],
-  "allowMultiple": true,
-  "allowFreeform": true
-}
-```
+- `id` (required): stable slug; echoed in results.
+- `prompt` (required): full question text.
+- `options` (required): `{value, label, description?}`. `value` is returned to you, `label` is shown, `description` is optional one-line elaboration.
+- `label`: short tab label for multi-question UI (default `Q1`, `Q2`…).
+- `allowOther`: defaults `true` (adds a "Type something" free-text option). Set `false` only when choices are truly exhaustive.
 
-## Anti-patterns
+## Result
 
-- Asking `ask_user` without first gathering context
-- Using it for trivial formatting choices
-- Forcing options when freeform is clearly better
-- Asking the same question repeatedly without new information
-- Proceeding with high-stakes implementation after unclear/cancelled answer
+One line per question: `<label>: user selected: <n>. <label>` or `<label>: user wrote: <text>`. `User cancelled the questionnaire` if Esc.
 
-## If user cancels or answer is unclear
+## Best practices
 
-Pause execution and explain what is blocked.
-Use at most one narrower follow-up `ask_user` question (attempt 2).
-After that, do not continue asking in a loop:
-- for high-stakes decisions: remain blocked until explicit decision
-- for ambiguity-only decisions: proceed only if the user delegated the choice ("your call")
+- Batch related questions into one call; don't drip single questions when they belong together.
+- Order options most-likely-first; keep labels short, details in `description`.
+- `value` = machine-friendly slug; `label` = human-readable.
+- Don't ask what you can infer from code, use only for genuine user-only decisions.

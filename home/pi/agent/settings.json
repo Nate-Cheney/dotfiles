@@ -7,10 +7,6 @@
   "tuiMode": "regular",
   "externalEditor": "vi",
   "packages": [
-    {
-      "source": "npm:pi-ask-user@0.14.0",
-      "skills": []
-    },
     "git:github.com/dmmulroy/pi-web-tools@445836dcf4b6df202cd4a45ee641ec12eb86c36d"
   ],
   "theme": "catppuccin-macchiato"
