@@ -6,7 +6,9 @@ set -euo pipefail
 DEVCONTAINER_DIR="$(pwd)/.devcontainer"
 for file in "$DEVCONTAINER_DIR"/setup-*.sh; do
     [ -e "$file" ] || continue
-    echo "Running setup file: $file..."
+    echo "#############################################"
+    echo "# Setup module: ${file##*/} "
+    echo "#############################################"
     bash "$file"
 done
 
