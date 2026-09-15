@@ -1,0 +1,35 @@
+{
+    "baseUrl": "https://<resource>.services.ai.azure.com/openai/v1",
+    "models": [
+        {
+            "id": "DeepSeek-V4-Pro",
+            "name": "DeepSeek V4 Pro",
+            "reasoning": true,
+            "input": ["text"],
+            "contextWindow": 1000000,
+            "maxTokens": 262144,
+            "compat": {
+                "supportsStore": false,
+                "supportsDeveloperRole": false,
+                "supportsReasoningEffort": false,
+                "maxTokensField": "max_tokens",
+                "supportsStrictMode": false
+            }
+        },
+        {
+            "id": "Kimi-K2.6",
+            "name": "Kimi K2.6",
+            "reasoning": true,
+            "input": ["text", "image"],
+            "contextWindow": 262144,
+            "maxTokens": 262144,
+            "compat": {
+                "supportsStore": false,
+                "supportsDeveloperRole": false,
+                "supportsReasoningEffort": false,
+                "maxTokensField": "max_tokens",
+                "supportsStrictMode": false
+            }
+        }
+    ]
+}
