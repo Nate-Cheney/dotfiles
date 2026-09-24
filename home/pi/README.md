@@ -4,7 +4,7 @@ Global Pi configuration, managed via dotfiles, and stowed into `~/.pi`.
 
 ## Containerization
 
-Pi ships without any kind of security. In order to separate Pi's execution environment from my host system, I use devcontainers. This allows me to utilize Containerization and Linux permissions to limit unwanted behavior outside of the development environment. 
+Pi ships without any kind of security. In order to separate Pi's execution environment from my host system, I use devcontainers.
 
 This setup is **not** perfect, but has served me well thus far.
 
@@ -27,8 +27,8 @@ In order to add Pi to a devcontainer, I use the following `devcontainer.json` & 
         "ghcr.io/jungaretti/features/vim:1": {}
     },
     "mounts": [
-        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind",
-        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind"
+        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind,readonly",
+        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind,readonly"
     ],
     "postCreateCommand": "bash .devcontainer/setup.sh"
 }
