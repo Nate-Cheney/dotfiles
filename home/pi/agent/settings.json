@@ -1,11 +1,12 @@
 {
-  "lastChangelogVersion": "0.84.4",
+  "lastChangelogVersion": "0.87.1",
   "defaultProvider": "opencode-go",
-  "defaultModel": "gpt-5.6-luna",
+  "defaultModel": "glm-5.3-flash",
   "defaultThinkingLevel": "high",
   "showCacheMissNotices": true,
   "tuiMode": "regular",
-  "externalEditor": "vi",
+  "externalEditor": "vim",
+  "baseDelayMs": 5000,
   "packages": [
     "git:github.com/dmmulroy/pi-web-tools@445836dcf4b6df202cd4a45ee641ec12eb86c36d"
   ],

@@ -23,7 +23,8 @@ In order to add Pi to a devcontainer, I use the following `devcontainer.json` & 
         "ghcr.io/devcontainers/features/node:2": {
             "version": "22",
             "npmVersion": "12.0.2"
-        }
+        },
+        "ghcr.io/jungaretti/features/vim:1": {}
     },
     "mounts": [
         "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind",
@@ -36,16 +37,25 @@ In order to add Pi to a devcontainer, I use the following `devcontainer.json` & 
 ### setup.sh
 
 ``` bash
+#!/bin/bash
+
+set -euo pipefail
 .
 .
 .
 # Run modular setup scripts
 DEVCONTAINER_DIR="$(pwd)/.devcontainer"
-for file in "$DEVCONTAINER_DIR"/setup-*.sh; do
+for file in "$DEVCONTAINER_DIR"/modules/setup-*.sh; do
     [ -e "$file" ] || continue
-    echo "Running setup file: $file..."
+    echo "#############################################"
+    echo "# Setup module: ${file##*/} "
+    echo "#############################################"
     bash "$file"
+
+    echo "Module '$file' done."
 done
+
+echo "Setup done."
 ```
 
 ### setup-pi.sh
@@ -64,9 +74,6 @@ fi
 echo "Using Node.js $(node --version) and npm $(npm --version)..."
 echo "Installing Pi..."
 npm install -g --ignore-scripts --no-audit --no-fund @earendil-works/pi-coding-agent
-
 echo "Pi installed at $(command -v pi)"
-pi --version
-echo "Setup done!"
+echo "Pi version: $(pi --version)"
 ```
-
