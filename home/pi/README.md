@@ -27,8 +27,8 @@ In order to add Pi to a devcontainer, I use the following `devcontainer.json` & 
         "ghcr.io/jungaretti/features/vim:1": {}
     },
     "mounts": [
-        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind,readonly",
-        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind,readonly"
+        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind",
+        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind"
     ],
     "postCreateCommand": "bash .devcontainer/setup.sh"
 }

@@ -9,8 +9,8 @@
         }
     },
     "mounts": [
-        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind,readonly",
-        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind,readonly"
+        "source=${localEnv:HOME}/.agents,target=/home/vscode/.agents,type=bind",
+        "source=${localEnv:HOME}/.pi,target=/home/vscode/.pi,type=bind"
     ],
     "postCreateCommand": "bash .devcontainer/setup.sh"
 }
