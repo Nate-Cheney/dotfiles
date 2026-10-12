@@ -22,7 +22,7 @@ In order to add Pi to a devcontainer, I use the following `devcontainer.json` & 
     "features": {
         "ghcr.io/devcontainers/features/node:2": {
             "version": "22",
-            "npmVersion": "12.0.2"
+            "npmVersion": "12.2.0"
         },
         "ghcr.io/jungaretti/features/vim:1": {}
     },
@@ -58,7 +58,7 @@ done
 echo "Setup done."
 ```
 
-### setup-pi.sh
+### modules/setup-pi.sh
 
 ``` bash
 #!/bin/bash
