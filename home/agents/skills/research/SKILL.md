@@ -40,16 +40,7 @@ Call the `ask_user` tool with one focused question: "Should I begin this researc
 
 If `ask_user` is unavailable, stop and say the approval gate cannot be performed. Never silently replace it with a plain-text question or proceed unapproved.
 
-### 3. Prepare artifacts
-
-Only after approval:
-
-1. Derive a kebab-case `slug` (≤ 40 chars) from the question.
-2. Set `REPORT_PATH=.research/reports/$(date +%F)-<slug>.md` and `RUN_DIR=.research/runs/<slug>-$(date +%H%M%S)`.
-3. `mkdir -p` both.
-4. Write the approved research plan to `$RUN_DIR/research-plan.md`.
-
-### 4. Worker prompt
+### 3. Worker prompt
 
 The worker's system prompt consists of two parts: a main shared prompt and a secondary prompt. The supplemental prompt will be selected based on the research depth.
 
@@ -67,25 +58,37 @@ The worker's supplemental prompt will be: `~/.agents/skills/research/worker/dept
 
 The pi flags: `system-prompt` and `append-system-prompt` will be used when spawning the sub-agent. This prevents the **ochestrator** from needing to read and concatinate the prompts.
 
-### 5. Sub-agent Timeout
+### 4. Sub-agent Timeout
 
 The configured timeout will depend on the research depth. Use the following times (seconds) for each depth:
 - **deep**: 900
 - **standard**: 480
 - **quick**: 240 
 
-### 6. Spawn the sub-agent synchronously
+### 5. Spawn the sub-agent synchronously
+
+Before spawning, deterministically compute the report path and session ID from the research question. All characters in the question contribute to the initial text; derive the slug by lower-casing, replacing non-alphanumerics with hyphens, collapsing runs, trimming ends, and truncating to 40 characters.
+
+The slug algorithm lives only in this file. The resolved `report_path` is injected into the worker's system prompt, so the worker never derives the path itself. The orchestrator also creates the report directory with `mkdir -p`, because the worker has no bash tool.
 
 Run **one bash call**, with the bash tool's `timeout` parameter set to the depth's configured timeout in seconds:
 
 ```bash
+slug=$(echo "$research_question" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//' | cut -c1-40)
+report_path=".research/reports/$(date +%F)-${slug}.md"
+session_id="research-$(date +%F)-${slug}"
+
+mkdir -p ".research/reports"
+
 pi -p \
-  --name "research: <slug>" \
+  --session-id "$session_id" \
+  --name "research: $slug" \
   --tools websearch,webfetch,read,write \
   --system-prompt "$HOME/.agents/skills/research/worker/system-prompt.md" \
   --append-system-prompt "Today is $(date +%F)" \
   --append-system-prompt "$HOME/.agents/skills/research/worker/depths/<depth>.md" \
-  > "$RUN_DIR/output.log" 2>&1
+  --append-system-prompt "Write the final report to: $report_path" \
+  "$research_question"
 ```
 
 Notes:
@@ -94,19 +97,20 @@ Notes:
 - Do **not** background the process (`&`, `nohup`): this call is deliberately synchronous; your turn waits.
 - One research run at a time per session.
 
-### 7. Verify and deliver
+### 6. Verify and deliver
 
 After the bash call returns:
 
-1. Check the exit code and that `$REPORT_PATH` exists and is non-empty. If not, follow **Failure handling**.
-2. Read the report file.
-3. Post to chat: an **executive summary** (succinct and direct answer to the objective, key claims with inline links to sources the sub-agent actually fetched), the report path, and any unresolved questions the report flags. Do not paste the full report; the file is the artifact.
-4. If the report is labeled partial, preserve that label prominently.
+1. Recompute the deterministic `report_path` from the research question using the same slug algorithm as in step 5.
+2. Check the exit code and that `report_path` exists and is non-empty. If not, follow **Failure handling**.
+3. Read the report file.
+4. Post to chat: an **executive summary** (succinct and direct answer to the objective, key claims with inline links to sources the sub-agent actually fetched), the report path, and any unresolved questions the report flags. Do not paste the full report; the file is the artifact.
+5. If the report is labeled partial, preserve that label prominently.
 
-### 8. Failure handling
+### 7. Failure handling
 
 Fail closed, never fabricate or fall back to memory:
 
-- **Non-zero exit / missing report:** tell the user plainly, give `$RUN_DIR/output.log` for inspection, and report what was NOT established. Offer (a) inspect the log, (b) run inline with approval, or (c) abandon. Never auto-respawn.
-- **Timeout:** the process was killed; state the timeout, point at `output.log` and any partial report. If a partial report exists, you may summarize it only when clearly labeled **Partial research report**.
-- **Sub-agent asked a question instead of finishing** (visible in `output.log`): do not answer it blindly; surface it to the user.
+- **Non-zero exit / missing report:** tell the user plainly, note the bash exit code, recompute the expected `report_path`, and report what was NOT established. If a partial report exists at the expected path, you may summarize it only when clearly labeled **Partial research report**. Offer (a) run inline with approval, or (b) abandon. Never auto-respawn.
+- **Timeout:** the process was killed; state the timeout, recompute the expected `report_path`, and check for any partial report. If a partial report exists, you may summarize it only when clearly labeled **Partial research report**.
+- **Sub-agent asked a question instead of finishing:** do not answer it blindly; surface it to the user.
