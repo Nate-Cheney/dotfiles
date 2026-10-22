@@ -5,7 +5,7 @@ end
 
 ts.setup {
   -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-  ensure_installed = { "lua", "python", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+  ensure_installed = { "lua", "vim", "vimdoc" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
