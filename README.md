@@ -2,7 +2,7 @@
 
 My personal developmnent environment configuration.
 
-This is a shared repo for both Linux and Windows environments I use.
+This is a shared repo for both Linux and Windows environments that I use.
 
 ## Repository structure
 

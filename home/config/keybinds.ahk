@@ -7,6 +7,7 @@ SetTitleMatchMode 2
 #H::FocusOrLaunch( "Teams", "ms-teams.exe" )
 #M::FocusOrLaunch( "Outlook", "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE" )
 #O::FocusOrLaunch( "Obsidian", "C:\Users\ncheney\AppData\Local\Programs\Obsidian\Obsidian.exe" )
+#S::FocusOrLaunch( "", "C:\Program Files\Linear\Linear.exe" )
 
 ; Custom launch args
 #A::FocusOrLaunch(
