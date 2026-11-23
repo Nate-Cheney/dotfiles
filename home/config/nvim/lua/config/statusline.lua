@@ -3,15 +3,11 @@ local function set_statusline_hl()
 	local vis = vim.api.nvim_get_hl(0, { name = "Visual", link = false })
 	vim.api.nvim_set_hl(0, "StlMode", { fg = pms.fg, bg = vis.bg })
 
-	-- Git branch color: catppuccin "overlay0" from the active colorscheme
-	-- (mirrors starship's git_branch, which uses the catppuccin palette)
 	local ok, palettes = pcall(require, "catppuccin.palettes")
 	local overlay0 = ok and palettes.get_palette().overlay0 or "#6c7086"
 	vim.api.nvim_set_hl(0, "StlGit", { fg = overlay0, bg = pms.bg })
 end
 
--- Set now, and again whenever a colorscheme loads: statusline.lua is required
--- from init.lua, which runs *before* after/plugin/color.lua switches to catppuccin
 set_statusline_hl()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = set_statusline_hl })
 
